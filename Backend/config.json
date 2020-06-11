@@ -1,0 +1,71 @@
+{
+  "tempFolder": "E:/temp/",
+  "sendmail": "False",
+  "MailTo": "eelabatharva@gmail.com,electronicslab@atharvalab.com,businessdevelopment@atharvalab.com",
+  "mail_server": "smtp.gmail.com",
+  "from": "atharva.reportgenerator@gmail.com",
+  "password": "Admin@123",
+  "AppURL": "http://localhost:3000",
+  "status_file_name": "statusFile.json",
+  "unZippedDocxPath" : "D:/tryandtest",
+  "copyFolderName": "/copy",
+  "saveDocumentName": "test_report",
+"deviceCount": {"GPU": 1, "CPU": 2},
+"features": ["REGEX_AMOUNT", "Is_CurrencySymbol", "REGEX_DATE", "Start_Date_l1", "Start_Date_l2", "End_Date_l1",
+              "End_Date_l2", "DOB_l1", "DOB_l2", "P_TOTAL_l1", "P_TOTAL_l2","IS_START_DATE","IS_END_DATE"],
+"padding": 700,
+"textEncoding":"utf-8",
+"poolSize":"10",
+"separator":"|",
+"keyWordDictionaryFile": "keyword_dictionary.csv",
+"nameKeywordDictionaryFile": "name_keyword_dictionary.csv",
+"labelListFile": "label.csv",
+"flairModelPath":"..//..//model//en-ner-conll03-v0.4.pt",
+"dataCollectionPath":"..//common_data",
+"confidence": 50,
+"deleteProcessingDir": 0,
+"thumbnailHeight": "300",
+"thumbnailWidth": "400",
+"tables":
+	{
+	"document": "document",
+	"documentKeys": "document_keys",
+	"clientData": "client_data"
+	},
+"prediction":{
+		"savedModel":"..//..//model//model.h5"
+		},
+"logConfig": {
+  "version": 1,
+  "disable_existing_loggers": false,
+  "formatters": {
+    "simple": {
+      "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    }
+  },
+
+  "handlers": {
+    "console": {
+      "class": "logging.StreamHandler",
+      "formatter": "simple",
+      "stream": "ext://sys.stdout"
+    },
+
+    "file": {
+      "class": "logging.handlers.RotatingFileHandler",
+      "formatter": "simple",
+      "filename": "..//logfile.txt",
+      "maxBytes": 10485760,
+      "backupCount": 20,
+      "encoding": "utf8"
+    }
+  },
+
+  "loggers": {
+    "insureX": {
+      "handlers": ["console","file"],
+      "propagate": false
+    }
+  }
+}
+}
