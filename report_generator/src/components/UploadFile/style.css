@@ -1,0 +1,27 @@
+.display-block{
+    display: inline-block;
+}
+
+.enginer-name-div{
+    text-align: left;
+}
+
+.text-align-left{
+    text-align: left;
+}
+
+.loader-class{
+    height: 100%;
+    width: 100%;
+ position: absolute;
+ z-index: 99999999;
+}
+
+.loader{
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    margin: auto;
+    position: absolute;
+}
