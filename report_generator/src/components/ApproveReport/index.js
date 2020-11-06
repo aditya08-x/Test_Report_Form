@@ -16,7 +16,10 @@ import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
-import HelperServices from "../../services"
+import HelperServices from "../../services";
+import IconButton from "@material-ui/core/IconButton";
+import InputAdornment from "@material-ui/core/InputAdornment";
+import SearchIcon from "@material-ui/icons/Search";
 
 const columns = [
     { id: 'ReportName', label: 'Test Report Number', minWidth: 170 },
@@ -82,6 +85,7 @@ export default function ApproveReport() {
     const [rowsPerPage, setRowsPerPage] = React.useState(10);
     const [open, setOpen] = React.useState(false);
     const [rows, setRows] = React.useState([]);
+    const [filteredRows, setFilteredRows] = React.useState([]);
     const [password, setpassword] = React.useState("");
     const [approvingAuthority, setApprovingAuthority] = React.useState("");
     const [selectedReport, setSelectedReport] = React.useState("");
@@ -91,6 +95,7 @@ export default function ApproveReport() {
         HelperServices.getReportFileList()
             .then((data) => {
                 setRows(data)
+                setFilteredRows(data)
             })
         console.log('mount it!');
     }, []);
@@ -131,6 +136,12 @@ export default function ApproveReport() {
                 })
         }
     };
+
+    const searchResult = (e) => {
+        let filteredList = rows.filter(row => row["ReportName"].includes(e.target.value))
+        setFilteredRows(filteredList)
+    }
+
     const rejectReport = () => {
         if (password == "") {
             alert("Please enter the password")
@@ -199,6 +210,20 @@ export default function ApproveReport() {
 
     return (
         <>
+            <TextField
+                label="Search...."
+                style={{ "width": "50%", "padding-bottom": "35px" }}
+                onChange={searchResult}
+                InputProps={{
+                    endAdornment: (
+                        <InputAdornment>
+                            <IconButton>
+                                <SearchIcon />
+                            </IconButton>
+                        </InputAdornment>
+                    )
+                }}
+            />
             <Paper className={classes.root}>
                 <TableContainer className={classes.container}>
                     <Table stickyHeader aria-label="sticky table">
@@ -216,7 +241,7 @@ export default function ApproveReport() {
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => {
+                            {filteredRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => {
                                 return (
                                     <TableRow hover role="checkbox" tabIndex={-1} key={row.code}>
                                         {columns.map((column) => {
@@ -239,7 +264,7 @@ export default function ApproveReport() {
                 <TablePagination
                     rowsPerPageOptions={[10, 25, 100]}
                     component="div"
-                    count={rows.length}
+                    count={filteredRows.length}
                     rowsPerPage={rowsPerPage}
                     page={page}
                     onChangePage={handleChangePage}
