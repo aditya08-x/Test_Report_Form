@@ -9,6 +9,7 @@ from createTestReportPackages.utils import platform_exception as exp
 from createTestReportPackages.utils.platform_logging import tagging_logger
 from createTestReportPackages.pipelines import create_docx_from_data
 from createTestReportPackages.model import ReportsData
+import datetime
 
 URL = '/test-report-generator/get-report-list'
 
@@ -25,6 +26,11 @@ def func():
         tagging_logger.info(f"API START : UPLOAD IMAGE :: TEMPLATE_ID - ")
         report_data = ReportsData.ReportsData()
         response_data = report_data.REPORT_FILE_DATA_FRAME.to_json(orient='records')
+        response_data_new = sorted(json.loads(response_data),
+                                   key=lambda k: datetime.datetime.strptime(k['UploadDate'], "%m/%d/%Y, %H:%M:%S"),
+                                   reverse=True)
+        response_data = json.dumps(response_data_new)
+
         # response_data = [
         #     {
         #         "ReportName": "document1",
