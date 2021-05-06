@@ -1,5 +1,5 @@
 Flask==1.1.2
-Flask-Cors==3.0.8
+Flask-Cors==3.0.9
 flask-restplus==0.13.0
 opencv-python==4.2.0.34
 pandas==0.25.1
