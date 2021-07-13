@@ -73,7 +73,6 @@ def pdf_to_image_pdf(out_file, img_pdf_path, test_engineer_name, test_engineer_d
         newPage.append(Image.fromarray(resized))
     newPage[0].save(img_pdf_path, save_all=True, append_images=newPage[1:])
 
-
 def get_pix_map_for_test_engineer(out_file, name, test_engineer_dict, X, Y):
     stamp = get_stamp(test_engineer_dict[name])
     pixmap = stamp["pixmap"]
@@ -92,6 +91,39 @@ def get_pix_map_for_test_engineer(out_file, name, test_engineer_dict, X, Y):
             new_pix_map = {}
             dx = int((text_instances[0][0] * scalex) - (1 * stamp_widht) / 6)
             dy = int((text_instances[0][1] * scaley) - (stamp_height * 1.1))
+            for key in pixmap.keys():
+                new_pix_map[key[0] + dy, key[1] + dx] = pixmap[key]
+            new_pixmap_list.append(new_pix_map)
+        else:
+            new_pixmap_list.append({})
+    return new_pixmap_list
+
+
+
+def get_pix_map_for_forsign_wiht_location(out_file, name ,text_to_replace, X, Y, place= ""):
+    stamp = get_stamp(name)
+    pixmap = stamp["pixmap"]
+    stamp_height = stamp["height"]
+    stamp_widht = stamp["width"]
+    doc = fitz.open(out_file)
+    page = doc[0]
+    scalex = X / page.MediaBox[2]
+    scaley = Y / page.MediaBox[3]
+    print(scalex, scaley)
+    new_pixmap_list = []
+    for page in doc:
+        text = text_to_replace
+        text_instances = page.searchFor(text)
+
+        if (text_instances):
+            new_pix_map = {}
+            dx = int((text_instances[0][0] * scalex) - (1 * stamp_widht) / 6)
+            dy = int((text_instances[0][1] * scaley) - (stamp_height * 1.1))
+            if place == "right":
+                dx = int((text_instances[0][0] * scalex) + stamp_widht*0.4)
+                dy = int(0.7 * stamp_height)
+                if text_to_replace == "Date :":
+                    dy = int((text_instances[0][1] * scaley) - (stamp_height * 0.5))
             for key in pixmap.keys():
                 new_pix_map[key[0] + dy, key[1] + dx] = pixmap[key]
             new_pixmap_list.append(new_pix_map)
@@ -127,7 +159,7 @@ def get_pix_map_for_BDH(out_file, X, Y):
 
 
 def get_all_pixmap(out_file, X, Y):
-    stamp = get_stamp("stampHOD.pickle")
+    stamp = get_stamp("ZahidnewSign.pickel")
     pixmap = stamp["pixmap"]
     stamp_height = stamp["height"]
     stamp_widht = stamp["width"]
@@ -139,7 +171,7 @@ def get_all_pixmap(out_file, X, Y):
     new_pixmap_list = []
     for page in doc:
         text_instances = []
-        for text in ["Ajay Kumar Yadav", "Approving Authority","(Signature of Authorized person"]:
+        for text in ["Zahid Raza", "Approving Authority","(Signature of Authorized person"]:
             text_instances += page.searchFor(text)
         new_pix_map = {}
         if (text_instances):
@@ -232,7 +264,7 @@ def get_stamp(stamp_name, pdfPath=""):
 
 def func(request_json):
     test_engineer_dict = {
-        "Zahid Raza": "zahid_raza_sign.pickle",
+        # "Zahid Raza": "zahid_raza_sign.pickle",
         "Ankit Kumar": "ankit_kumar_sign.pickle",
         "Kaushal Kumar": "kaushalsign.pickle",
         "Mohit Singh": "mohit_sign.pickle",
@@ -240,7 +272,11 @@ def func(request_json):
         "Avishek Kumar": "avishek_kumar_sign.pickle",
         "Parth": "parth_sign.pickle",
         "Tushant Rajvanshi": "tushnat_sign.pickle",
-        "Isha Sachdev": "isha_sachdev_sign.pickle"
+        "Isha Sachdev": "isha_sachdev_sign.pickle",
+        "Sumit Saklani": "sumitSign.pickel",
+        "Aviral mishra": "aviralSign.pickel",
+        "Tripti Tiwari": "triptiSign.pickel",
+        "Kajal Jha": "kahajSign.pickel",
     }
     # get_stamp(test_engineer_dict["Zahid Raza"], r"C:\Users\aditya.verma\Desktop\ZahidSign.pdf")
     # get_stamp(test_engineer_dict["Ankit Kumar"], r"C:\Users\aditya.verma\Desktop\ankitSign.pdf")
@@ -282,3 +318,47 @@ def func(request_json):
     }
     mailService = MailService()
     mailService.send_mail(mail_data)
+
+if __name__ == "__main__":
+    pass
+    # get_stamp("tushnat_sign.pickle", r"C:\Users\aditya.verma\Desktop\reportwala\tushantSign.pdf")
+    # get_stamp("sumitSign.pickel", r"C:\Users\aditya.verma\Desktop\reportwala\sumitSign.pdf")
+    # get_stamp("aviralSign.pickel", r"C:\Users\aditya.verma\Desktop\reportwala\aviralSign.pdf")
+    # get_stamp("triptiSign.pickel", r"C:\Users\aditya.verma\Desktop\reportwala\triptiSign.pdf")
+    # get_stamp("kahajSign.pickel", r"C:\Users\aditya.verma\Desktop\reportwala\kahajSign.pdf")
+    # out_file = r"C:\Users\aditya.verma\Downloads\HCS Executive Branch Preliminary Exam.pdf"
+    # pages = convert_from_path(out_file, 200)
+    # X = pages[0].size[0]
+    # Y = pages[0].size[1]
+    # text_to_replace = "[Signature of the Candidate]"
+    # sign = get_pix_map_for_forsign_wiht_location(out_file, "priyanka.pickel",text_to_replace, X, Y)
+    # text_to_replace = "Place :"
+    # place = get_pix_map_for_forsign_wiht_location(out_file, "place.pickel", text_to_replace, X, Y, "right")
+    # text_to_replace = "Date :"
+    # date = get_pix_map_for_forsign_wiht_location(out_file, "date.pickel", text_to_replace, X, Y, "right")
+    # # print(sign)
+    # newPage = []
+    # for i, page in enumerate(pages):
+    #     print(i)
+    #     open_cv_image = np.array(page)
+    #     pixmap = sign[i]
+    #     for pixel in pixmap.keys():
+    #         open_cv_image[pixel[0], pixel[1]] = pixmap[pixel]
+    #     if i == 3:
+    #         pixmap = place[i]
+    #         for pixel in pixmap.keys():
+    #             open_cv_image[pixel[0], pixel[1]] = pixmap[pixel]
+    #     if i == 2:
+    #         pixmap = date[i]
+    #         print(pixmap)
+    #         for pixel in pixmap.keys():
+    #             open_cv_image[pixel[0], pixel[1]] = pixmap[pixel]
+    #     scale_percent = 60  # percent of original size
+    #     width = int(open_cv_image.shape[1] * scale_percent / 100)
+    #     height = int(open_cv_image.shape[0] * scale_percent / 100)
+    #     dim = (width, height)
+    #     # resize image
+    #     resized = cv2.resize(open_cv_image, dim, interpolation=cv2.INTER_AREA)
+    #     newPage.append(Image.fromarray(resized))
+    # img_pdf_path = "sign.pdf"
+    # newPage[0].save(img_pdf_path, save_all=True, append_images=newPage[1:])
