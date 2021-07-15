@@ -159,7 +159,7 @@ def get_pix_map_for_BDH(out_file, X, Y):
 
 
 def get_all_pixmap(out_file, X, Y):
-    stamp = get_stamp("ZahidnewSign.pickel")
+    stamp = get_stamp("ZahidnewSign.pickle")
     pixmap = stamp["pixmap"]
     stamp_height = stamp["height"]
     stamp_widht = stamp["width"]
@@ -175,8 +175,8 @@ def get_all_pixmap(out_file, X, Y):
             text_instances += page.searchFor(text)
         new_pix_map = {}
         if (text_instances):
-            dx = int(text_instances[0][0] * scalex)
-            dy = int((text_instances[0][1] * scaley) - (3 * stamp_height) / 4)
+            dx = int(int(text_instances[0][0] * scalex) - (1 * stamp_height) / 4)
+            dy = int((text_instances[0][1] * scaley) - (3.5 * stamp_height) / 4)
         else:
             text1 = page.getText(output='dict')
             maxY = 0
@@ -322,6 +322,7 @@ def func(request_json):
 if __name__ == "__main__":
     pass
     # get_stamp("tushnat_sign.pickle", r"C:\Users\aditya.verma\Desktop\reportwala\tushantSign.pdf")
+    # get_stamp("ZahidnewSign.pickle", r"C:\Users\aditya.verma\Desktop\reportwala\ZahidnewSign.pdf")
     # get_stamp("sumitSign.pickel", r"C:\Users\aditya.verma\Desktop\reportwala\sumitSign.pdf")
     # get_stamp("aviralSign.pickel", r"C:\Users\aditya.verma\Desktop\reportwala\aviralSign.pdf")
     # get_stamp("triptiSign.pickel", r"C:\Users\aditya.verma\Desktop\reportwala\triptiSign.pdf")
