@@ -11,8 +11,10 @@ class UploadFile extends React.Component {
     constructor(props) {
         super(props)
         this.state = {
-            testEngineerNameList: ["Select a name", "Zahid Raza", "Ankit Kumar", "Kaushal Kumar", "Mohit Singh", "Jatin", "Avishek Kumar", "Parth", "Tushant Rajvanshi", "Isha Sachdev", "Sumit Saklani", "Aviral mishra", "Tripti Tiwari", "Kajal Jha"],
+            testEngineerNameList: ["Select a name", "Ankit Kumar", "Kaushal Kumar", "Mohit Singh", "Jatin", "Avishek Kumar", "Parth", "Tushant Rajvanshi", "Isha Sachdev", "Sumit Saklani", "Aviral mishra", "Tripti Tiwari", "Kajal Jha","Gaurav Goswami"],
             selectedEngineerName: "Select a name",
+            approvingAuthority: "Zahid Raza",
+            approvingAuthorityList: ["Zahid Raza", "Shashank Raghubanshi"],
             file: null,
             fileName: "",
             rows: null,
@@ -39,7 +41,7 @@ class UploadFile extends React.Component {
     }
 
     submitReport = () => {
-        let { selectedEngineerName, file, fileName, rows } = this.state
+        let { selectedEngineerName,approvingAuthority, file, fileName, rows } = this.state
 
         if (selectedEngineerName == "Select a name") {
             alert("select a engineer name")
@@ -51,7 +53,7 @@ class UploadFile extends React.Component {
                     this.setState({
                         showLoader: true
                     })
-                    HelperServices.uploadFile(selectedEngineerName, file, fileName)
+                    HelperServices.uploadFile(selectedEngineerName, file, fileName, approvingAuthority)
                         .then((res) => {
                             this.setState({
                                 showLoader: false
@@ -81,6 +83,11 @@ class UploadFile extends React.Component {
             selectedEngineerName: name
         })
     }
+    onApprovingAthChnage = (name) => {
+        this.setState({
+            approvingAuthority: name
+        })
+    }
 
     render() {
         return (
@@ -106,6 +113,21 @@ class UploadFile extends React.Component {
                                 }
                             </Dropdown.Menu>
                         </Dropdown>
+                        <span className="display-block pr-2" style={{marginLeft:"15px"}}>Technical Manager</span>
+                        <Dropdown variant="contained" color="primary" className="display-block pl-4 ">
+                            <Dropdown.Toggle variant="success" id="dropdown-basic">
+                                {this.state.approvingAuthority}
+                            </Dropdown.Toggle>
+
+                            <Dropdown.Menu className="btn-blue" >
+                                {
+                                    this.state.approvingAuthorityList.map(name =>
+                                        <Dropdown.Item onClick={() => this.onApprovingAthChnage(name)}>{name}</Dropdown.Item>
+                                    )
+                                }
+                            </Dropdown.Menu>
+                        </Dropdown>
+                   
                     </div>
                     <Dropzone onDrop={this.onFileUpload} accept={[".docx"]} >
                         {({ getRootProps, getInputProps }) => (

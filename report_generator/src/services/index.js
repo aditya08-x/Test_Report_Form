@@ -22,13 +22,14 @@ const HelperServices = {
     //           });
     //       });
     //   },
-    uploadFile(testEngineerName, docxFile, reportFileName) {
+    uploadFile(testEngineerName, docxFile, reportFileName, approvingAuthority) {
         return new Promise(
             function (resolve, reject) {
                 var formData = new FormData();
                 formData.append('test_engineer_name', testEngineerName);
                 formData.append('report_docx', docxFile);
                 formData.append('report_file_name', reportFileName);
+                formData.append('approving_authority', approvingAuthority);
                 axios.post(REACT_APP_BACKEND_URL + "/test-report-generator/create-report-from-doc", formData)
                     .then((response) => {
                         resolve(response.status)

@@ -38,11 +38,11 @@ def doc_to_pdf(in_file, out_file):
     doc.Close()
 
 
-def pdf_to_image_pdf(out_file, img_pdf_path, test_engineer_name, test_engineer_dict):
+def pdf_to_image_pdf(out_file, img_pdf_path, test_engineer_name, test_engineer_dict, approving_authority):
     pages = convert_from_path(out_file, 200)
     X = pages[0].size[0]
     Y = pages[0].size[1]
-    new_pixmap_list = get_all_pixmap(out_file, X, Y)
+    new_pixmap_list = get_all_pixmap(out_file, X, Y, approving_authority)
     BDH_atamp_pixmap = get_pix_map_for_BDH(out_file, X, Y)
     test_engineer_sign = get_pix_map_for_test_engineer(out_file, test_engineer_name, test_engineer_dict, X, Y)
     letterhead = get_letterhead("letterhead.pickle")
@@ -158,8 +158,15 @@ def get_pix_map_for_BDH(out_file, X, Y):
     return new_pixmap_list
 
 
-def get_all_pixmap(out_file, X, Y):
-    stamp = get_stamp("ZahidnewSign.pickle")
+def get_all_pixmap(out_file, X, Y, approving_authority):
+    if approving_authority == "Zahid Raza":
+        stamp = get_stamp("ZahidnewSign.pickle")
+        name_list = ["Zahid Raza", "Approving Authority","(Signature of Authorized person"]
+        xx = 1
+    else:
+        stamp = get_stamp("ShashankRaghubanshiSign.pickle")
+        name_list = ["Shashank Raghubanshi", "Approving Authority", "(Signature of Authorized person"]
+        xx = 0
     pixmap = stamp["pixmap"]
     stamp_height = stamp["height"]
     stamp_widht = stamp["width"]
@@ -171,11 +178,11 @@ def get_all_pixmap(out_file, X, Y):
     new_pixmap_list = []
     for page in doc:
         text_instances = []
-        for text in ["Zahid Raza", "Approving Authority","(Signature of Authorized person"]:
+        for text in name_list:
             text_instances += page.searchFor(text)
         new_pix_map = {}
         if (text_instances):
-            dx = int(int(text_instances[0][0] * scalex) - (1 * stamp_height) / 4)
+            dx = int(int(text_instances[0][0] * scalex) - (xx * stamp_height) / 4)
             dy = int((text_instances[0][1] * scaley) - (3.5 * stamp_height) / 4)
         else:
             text1 = page.getText(output='dict')
@@ -277,6 +284,7 @@ def func(request_json):
         "Aviral mishra": "aviralSign.pickel",
         "Tripti Tiwari": "triptiSign.pickel",
         "Kajal Jha": "kahajSign.pickel",
+        "Gaurav Goswami": "GauravGoswamiSign.pickle",
     }
     # get_stamp(test_engineer_dict["Zahid Raza"], r"C:\Users\aditya.verma\Desktop\ZahidSign.pdf")
     # get_stamp(test_engineer_dict["Ankit Kumar"], r"C:\Users\aditya.verma\Desktop\ankitSign.pdf")
@@ -290,6 +298,7 @@ def func(request_json):
     # print("sign created")
     test_engineer_name = request_json.form["test_engineer_name"]
     report_file_name = request_json.form["report_file_name"]
+    approving_authority = request_json.form["approving_authority"]
     word_file = request_json.files["report_docx"]
     print(test_engineer_name, word_file, report_file_name)
     document_name = os.path.splitext(report_file_name)[0]
@@ -310,7 +319,7 @@ def func(request_json):
     pd.to_pickle(report_data.REPORT_FILE_DATA_FRAME.append(status_repost, ignore_index=True), "reportFileDataframe.pkl")
     status_repost = json.dumps(status_repost)
     write_report_in_dir(document_name, status_repost)
-    pdf_to_image_pdf(out_file, img_pdf_path, test_engineer_name, test_engineer_dict)
+    pdf_to_image_pdf(out_file, img_pdf_path, test_engineer_name, test_engineer_dict, approving_authority)
     mail_data = {
         "to": CONFIG["MailTo"],
         "Subject": f"New Report Uploaded {document_name}",
@@ -321,8 +330,8 @@ def func(request_json):
 
 if __name__ == "__main__":
     pass
-    # get_stamp("tushnat_sign.pickle", r"C:\Users\aditya.verma\Desktop\reportwala\tushantSign.pdf")
-    # get_stamp("ZahidnewSign.pickle", r"C:\Users\aditya.verma\Desktop\reportwala\ZahidnewSign.pdf")
+    # get_stamp("GauravGoswamiSign.pickle", r"C:\Users\aditya.verma\Desktop\reportwala\GauravGoswamiSign.pdf")
+    # get_stamp("ShashankRaghubanshiSign.pickle", r"C:\Users\aditya.verma\Desktop\reportwala\ShashankRaghubanshiSign.pdf")
     # get_stamp("sumitSign.pickel", r"C:\Users\aditya.verma\Desktop\reportwala\sumitSign.pdf")
     # get_stamp("aviralSign.pickel", r"C:\Users\aditya.verma\Desktop\reportwala\aviralSign.pdf")
     # get_stamp("triptiSign.pickel", r"C:\Users\aditya.verma\Desktop\reportwala\triptiSign.pdf")
