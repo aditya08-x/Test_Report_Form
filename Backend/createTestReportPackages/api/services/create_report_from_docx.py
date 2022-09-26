@@ -1,9 +1,9 @@
 import pandas as pd
-from flask_restplus import fields
+# from flask_restplus import fields
 import os
 import uuid
-import pythoncom
-import win32com.client
+# import pythoncom
+# import win32com.client
 from pdf2image import convert_from_path
 import cv2
 import numpy as np
@@ -11,7 +11,8 @@ from PIL import Image
 import pickle
 import fitz
 from shutil import copyfile
-
+from reportlab.pdfgen import canvas
+from PyPDF2 import PdfFileWriter, PdfFileReader
 from createTestReportPackages.model.MailService import MailService
 from createTestReportPackages.parser import CONFIG
 import datetime
@@ -23,11 +24,11 @@ wdFormatPDF = 17
 
 URL = '/test-report-generator/create-report-from-doc'
 
-request_fields = {
-    "report_file_path": fields.String('File path of the report', required=True),
-    "test_engineer_name": fields.String('Test engineer name', required=True),
-    "report_file_name": fields.String('Report file name', required=True)
-}
+# request_fields = {
+#     "report_file_path": fields.String('File path of the report', required=True),
+#     "test_engineer_name": fields.String('Test engineer name', required=True),
+#     "report_file_name": fields.String('Report file name', required=True)
+# }
 
 
 def doc_to_pdf(in_file, out_file):
@@ -37,6 +38,62 @@ def doc_to_pdf(in_file, out_file):
     doc.SaveAs(out_file, FileFormat=wdFormatPDF)
     doc.Close()
 
+
+def make_text_pdf_with_watermark(file_to_process, img_pdf_path, test_engineer_name, test_engineer_stamp, approving_authority):
+    file_obj_text_pdf = PdfFileReader(open(file_to_process, "rb"))
+    X = float(file_obj_text_pdf.getPage(0).mediabox[2])
+    Y = float(file_obj_text_pdf.getPage(0).mediabox[3])
+    approving_authorit_stamp_coordinates, approving_authority_stamp = get_location_for_approving_authority(out_file, X, Y, approving_authority)
+    BDH_stamp_coordinates, BDH_stamp = get_stamp_location_for_BDH(out_file, X, Y)
+    test_engineer_stamp_coordinates = get_stamp_location_for_test_engineer(out_file, test_engineer_name, X, Y)
+    img = cv2.imread(test_engineer_stamp, cv2.IMREAD_UNCHANGED)
+    img = cv2.imread(test_engineer_stamp, cv2.IMREAD_UNCHANGED)
+    height = img.shape[0]
+    width = img.shape[1]
+    width_te_sign = 60
+    dwh = width / width_te_sign
+    height_te_sign = height / dwh
+    page_count_text_pdf = file_obj_text_pdf.getNumPages()
+    document_name = os.path.splitext(file_to_process)[0]
+    # save_document_path = CONFIG["tempFolder"] + str(document_name)
+    save_document_path = str(document_name)
+    watermark_file_name = os.path.join(save_document_path, document_name) + 'signs_watermark.pdf'
+    # watermark_file_name = 'letterhead_to_add.pdf'
+    c = canvas.Canvas(watermark_file_name)
+    watermark = PdfFileReader(open("letterhead.pdf", "rb"))
+    output_file_wm = PdfFileWriter()
+    for i in range(page_count_text_pdf):
+        if i in approving_authorit_stamp_coordinates:
+            coordinates = approving_authorit_stamp_coordinates[i]
+            c.drawImage(approving_authority_stamp, coordinates["X"], Y - coordinates["Y"], 60, 60)
+        if i in BDH_stamp_coordinates:
+            coordinates = BDH_stamp_coordinates[i]
+            c.drawImage(BDH_stamp, coordinates["X"], Y - coordinates["Y"], 150, 60)
+        if i in test_engineer_stamp_coordinates:
+            coordinates = test_engineer_stamp_coordinates[i]
+            c.drawImage(test_engineer_stamp, coordinates["X"], Y - coordinates["Y"], width_te_sign, height_te_sign)
+        c.showPage()
+        output_file_wm.addPage(watermark.getPage(0))
+    c.save()
+    multiple_img_path =  os.path.join(save_document_path, document_name) + '_Letter_multiple.pdf'
+    with open(multiple_img_path, "wb") as outputStream:
+        output_file_wm.write(outputStream)
+    output_file = PdfFileWriter()
+
+    watermark = PdfFileReader(open(multiple_img_path, "rb"))
+    input_file = PdfFileReader(open(watermark_file_name, "rb"))
+    for page_number in range(page_count_text_pdf):
+        print ("Watermarking page {} of {}".format(page_number, page_count_text_pdf))
+        # merge the watermark with the page
+        input_page = watermark.getPage(page_number)
+        input_page.mergePage(input_file.getPage(page_number))
+        input_page.mergePage(file_obj_text_pdf.getPage(page_number))
+        # add page from input file to output document
+        output_file.addPage(input_page)
+
+    # finally, write "output" to document-output.pdf
+    with open(img_pdf_path, "wb") as outputStream:
+        output_file.write(outputStream)
 
 def pdf_to_image_pdf(out_file, img_pdf_path, test_engineer_name, test_engineer_dict, approving_authority):
     pages = convert_from_path(out_file, 200)
@@ -156,6 +213,76 @@ def get_pix_map_for_BDH(out_file, X, Y):
         else:
             new_pixmap_list.append({})
     return new_pixmap_list
+
+
+
+def get_stamp_location_for_BDH(out_file, X, Y):
+    doc = fitz.open(out_file)
+    page = doc[0]
+    scalex = X / page.MediaBox[2]
+    scaley = Y / page.MediaBox[3]
+    print(scalex, scaley)
+    coordinate_list = {}
+    BDH_stamp = os.path.join("signs","stampBDH.png")
+    for i, page in enumerate(doc):
+        text = "Sailesh Chandra Srivastava"
+        text_instances = page.searchFor(text)
+        if (text_instances):
+            coordinate_list[i] = {"X":text_instances[0][0],"Y":text_instances[0][1]}
+    return coordinate_list, BDH_stamp
+
+
+def get_location_for_approving_authority(out_file, X, Y, approving_authority):
+    if approving_authority == "Zahid Raza":
+        name_list = ["Zahid Raza", "Approving Authority","(Signature of Authorized person"]
+        approving_authority_stamp = os.path.join("signs","Zahid.png")
+    elif approving_authority == "Avishek":
+        name_list = ["Avishek", "Approving Authority", "(Signature of Authorized person"]
+        approving_authority_stamp = os.path.join("signs", "Aviral.png")
+    else:
+        name_list = ["Shashank Raghubanshi", "Approving Authority", "(Signature of Authorized person"]
+        approving_authority_stamp = os.path.join("signs", "ShashankRaghubanshiSign.png")
+    doc = fitz.open(out_file)
+    page = doc[0]
+    scalex = X / page.MediaBox[2]
+    scaley = Y / page.MediaBox[3]
+    print(scalex, scaley)
+    coordinate_list = {}
+    for i, page in enumerate(doc):
+        text_instances = []
+        for text in name_list:
+            text_instances += page.searchFor(text)
+        if (text_instances):
+            coordinate_list[i] = {"X":text_instances[0][0],"Y":text_instances[0][1]}
+        else:
+            text1 = page.getText(output='dict')
+            maxY = 0
+            for box in text1['blocks']:
+                boxY = box['bbox'][3]
+                if maxY < boxY:
+                    try:
+                        if not box['lines'][0]['spans'][0]['text'].startswith("TRF No."):
+                            maxY = boxY
+                    except Exception as e:
+                        maxY = boxY
+            lastRowHeight = maxY
+            coordinate_list[i] = {"X":X-100, "Y":lastRowHeight-10}
+    return coordinate_list, approving_authority_stamp
+
+
+def get_stamp_location_for_test_engineer(out_file, name, X, Y):
+    doc = fitz.open(out_file)
+    page = doc[0]
+    scalex = X / page.MediaBox[2]
+    scaley = Y / page.MediaBox[3]
+    print(scalex, scaley)
+    coordinate_list = {}
+    for i, page in enumerate(doc):
+        text = name
+        text_instances = page.searchFor(text)
+        if (text_instances):
+            coordinate_list[i] = {"X":text_instances[0][0],"Y":text_instances[0][1]}
+    return coordinate_list
 
 
 def get_all_pixmap(out_file, X, Y, approving_authority):
@@ -328,8 +455,27 @@ def func(request_json):
     mailService = MailService()
     mailService.send_mail(mail_data)
 
-if __name__ == "__main__":
-    pass
+if __name__ =="__main__":
+    out_file = "/Users/adityaverma/Downloads/A220601-010Rpe.pdf"
+    img_pdf_path = "test_img.pdf"
+    test_engineer_name = "Gaurav Kumar"
+    test_engineer_dict_for_text_pdf = {
+        "Ankit Kumar": "Ankit Kumar.png",
+        "Aviral mishra": "Aviral.png",
+        "Avishek Kumar": "Avishek.png",
+        "Gaurav Kumar": "GauravGoswami.png",
+        "Kajal Jha": "KajalJha.png",
+        "Kaushal Kumar": "Kaushal.png",
+        "Mohit Singh": "Mohit.png",
+        "Parth": "Parth Singh.png",
+        "Tushant Rajvanshi": "tushantSign.png"
+    }
+    approving_authority = "Zahid Raza"
+    # pdf_to_image_pdf(out_file, img_pdf_path, test_engineer_name, test_engineer_dict, approving_authority)
+    test_engineer_sign = os.path.join("signs",test_engineer_dict_for_text_pdf[test_engineer_name])
+    make_text_pdf_with_watermark(out_file, img_pdf_path, test_engineer_name, test_engineer_sign, approving_authority)
+# if __name__ == "__main__":
+#     pass
     # get_stamp("GauravGoswamiSign.pickle", r"C:\Users\aditya.verma\Desktop\reportwala\GauravGoswamiSign.pdf")
     # get_stamp("ShashankRaghubanshiSign.pickle", r"C:\Users\aditya.verma\Desktop\reportwala\ShashankRaghubanshiSign.pdf")
     # get_stamp("sumitSign.pickel", r"C:\Users\aditya.verma\Desktop\reportwala\sumitSign.pdf")

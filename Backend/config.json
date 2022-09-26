@@ -1,5 +1,6 @@
 {
   "tempFolder": "D:/temp/",
+  "signs_path": "./signs",
   "sendmail": "False",
   "MailTo": "eelabatharva@gmail.com,electronicslab@atharvalab.com,businessdevelopment@atharvalab.com",
   "mail_server": "smtp.gmail.com",
