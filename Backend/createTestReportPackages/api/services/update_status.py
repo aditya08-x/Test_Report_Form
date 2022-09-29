@@ -74,8 +74,8 @@ def func(request_json):
                     "Subject": f"Report Rejected by {authority[authority_name]}",
                     "body": f"Hi <br> <b> {authority[authority_name]} </b> has Rejected the report <b> {report_name} </b> <br/> the reason for rejection is {reject_message} ",
                 }
-            mailService = MailService()
-            mailService.send_mail(mail_data)
+            # mailService = MailService()
+            # mailService.send_mail(mail_data)
             new_row = report_data.REPORT_FILE_DATA_FRAME.loc[
                 report_data.REPORT_FILE_DATA_FRAME.ReportName == report_name].reset_index()
             import pandas as pd

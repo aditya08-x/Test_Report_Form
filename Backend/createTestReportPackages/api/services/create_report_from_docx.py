@@ -1,9 +1,9 @@
 import pandas as pd
-# from flask_restplus import fields
+from flask_restplus import fields
 import os
 import uuid
-# import pythoncom
-# import win32com.client
+import pythoncom
+import win32com.client
 from pdf2image import convert_from_path
 import cv2
 import numpy as np
@@ -24,11 +24,11 @@ wdFormatPDF = 17
 
 URL = '/test-report-generator/create-report-from-doc'
 
-# request_fields = {
-#     "report_file_path": fields.String('File path of the report', required=True),
-#     "test_engineer_name": fields.String('Test engineer name', required=True),
-#     "report_file_name": fields.String('Report file name', required=True)
-# }
+request_fields = {
+    "report_file_path": fields.String('File path of the report', required=True),
+    "test_engineer_name": fields.String('Test engineer name', required=True),
+    "report_file_name": fields.String('Report file name', required=True)
+}
 
 
 def doc_to_pdf(in_file, out_file):
@@ -39,14 +39,13 @@ def doc_to_pdf(in_file, out_file):
     doc.Close()
 
 
-def make_text_pdf_with_watermark(file_to_process, img_pdf_path, test_engineer_name, test_engineer_stamp, approving_authority):
-    file_obj_text_pdf = PdfFileReader(open(file_to_process, "rb"))
+def make_text_pdf_with_watermark(out_file, img_pdf_path, test_engineer_name, test_engineer_stamp, approving_authority):
+    file_obj_text_pdf = PdfFileReader(open(out_file, "rb"))
     X = float(file_obj_text_pdf.getPage(0).mediabox[2])
     Y = float(file_obj_text_pdf.getPage(0).mediabox[3])
     approving_authorit_stamp_coordinates, approving_authority_stamp = get_location_for_approving_authority(out_file, X, Y, approving_authority)
     BDH_stamp_coordinates, BDH_stamp = get_stamp_location_for_BDH(out_file, X, Y)
     test_engineer_stamp_coordinates = get_stamp_location_for_test_engineer(out_file, test_engineer_name, X, Y)
-    img = cv2.imread(test_engineer_stamp, cv2.IMREAD_UNCHANGED)
     img = cv2.imread(test_engineer_stamp, cv2.IMREAD_UNCHANGED)
     height = img.shape[0]
     width = img.shape[1]
@@ -54,13 +53,13 @@ def make_text_pdf_with_watermark(file_to_process, img_pdf_path, test_engineer_na
     dwh = width / width_te_sign
     height_te_sign = height / dwh
     page_count_text_pdf = file_obj_text_pdf.getNumPages()
-    document_name = os.path.splitext(file_to_process)[0]
+    document_name = os.path.splitext(out_file)[0]
     # save_document_path = CONFIG["tempFolder"] + str(document_name)
     save_document_path = str(document_name)
     watermark_file_name = os.path.join(save_document_path, document_name) + 'signs_watermark.pdf'
     # watermark_file_name = 'letterhead_to_add.pdf'
     c = canvas.Canvas(watermark_file_name)
-    watermark = PdfFileReader(open("letterhead.pdf", "rb"))
+    watermark = PdfFileReader(open("Letterheadsite2.pdf", "rb"))
     output_file_wm = PdfFileWriter()
     for i in range(page_count_text_pdf):
         if i in approving_authorit_stamp_coordinates:
@@ -223,7 +222,7 @@ def get_stamp_location_for_BDH(out_file, X, Y):
     scaley = Y / page.MediaBox[3]
     print(scalex, scaley)
     coordinate_list = {}
-    BDH_stamp = os.path.join("signs","stampBDH.png")
+    BDH_stamp = os.path.join("signs","stampBDH1.png")
     for i, page in enumerate(doc):
         text = "Sailesh Chandra Srivastava"
         text_instances = page.searchFor(text)
@@ -236,9 +235,9 @@ def get_location_for_approving_authority(out_file, X, Y, approving_authority):
     if approving_authority == "Zahid Raza":
         name_list = ["Zahid Raza", "Approving Authority","(Signature of Authorized person"]
         approving_authority_stamp = os.path.join("signs","Zahid.png")
-    elif approving_authority == "Avishek":
-        name_list = ["Avishek", "Approving Authority", "(Signature of Authorized person"]
-        approving_authority_stamp = os.path.join("signs", "Aviral.png")
+    elif approving_authority == "Avishek Kumar":
+        name_list = ["Avishek Kumar", "Approving Authority", "(Signature of Authorized person"]
+        approving_authority_stamp = os.path.join("signs", "Avishek.png")
     else:
         name_list = ["Shashank Raghubanshi", "Approving Authority", "(Signature of Authorized person"]
         approving_authority_stamp = os.path.join("signs", "ShashankRaghubanshiSign.png")
@@ -254,19 +253,19 @@ def get_location_for_approving_authority(out_file, X, Y, approving_authority):
             text_instances += page.searchFor(text)
         if (text_instances):
             coordinate_list[i] = {"X":text_instances[0][0],"Y":text_instances[0][1]}
-        else:
-            text1 = page.getText(output='dict')
-            maxY = 0
-            for box in text1['blocks']:
-                boxY = box['bbox'][3]
-                if maxY < boxY:
-                    try:
-                        if not box['lines'][0]['spans'][0]['text'].startswith("TRF No."):
-                            maxY = boxY
-                    except Exception as e:
-                        maxY = boxY
-            lastRowHeight = maxY
-            coordinate_list[i] = {"X":X-100, "Y":lastRowHeight-10}
+        # else:
+        #     text1 = page.getText(output='dict')
+        #     maxY = 0
+        #     for box in text1['blocks']:
+        #         boxY = box['bbox'][3]
+        #         if maxY < boxY:
+        #             try:
+        #                 if not box['lines'][0]['spans'][0]['text'].startswith("TRF No."):
+        #                     maxY = boxY
+        #             except Exception as e:
+        #                 maxY = boxY
+        #     lastRowHeight = maxY
+        #     coordinate_list[i] = {"X":X-100, "Y":lastRowHeight-35}
     return coordinate_list, approving_authority_stamp
 
 
@@ -397,32 +396,17 @@ def get_stamp(stamp_name, pdfPath=""):
 
 
 def func(request_json):
-    test_engineer_dict = {
-        # "Zahid Raza": "zahid_raza_sign.pickle",
-        "Ankit Kumar": "ankit_kumar_sign.pickle",
-        "Kaushal Kumar": "kaushalsign.pickle",
-        "Mohit Singh": "mohit_sign.pickle",
-        "Jatin": "jatin_dalal_sign.pickle",
-        "Avishek Kumar": "avishek_kumar_sign.pickle",
-        "Parth": "parth_sign.pickle",
-        "Tushant Rajvanshi": "tushnat_sign.pickle",
-        "Isha Sachdev": "isha_sachdev_sign.pickle",
-        "Sumit Saklani": "sumitSign.pickel",
-        "Aviral mishra": "aviralSign.pickel",
-        "Tripti Tiwari": "triptiSign.pickel",
-        "Kajal Jha": "kahajSign.pickel",
-        "Gaurav Goswami": "GauravGoswamiSign.pickle",
+    test_engineer_dict_for_text_pdf = {
+        "Ankit Kumar": "Ankit Kumar.png",
+        "Aviral mishra": "Aviral.png",
+        "Avishek Kumar": "Avishek.png",
+        "Gaurav Kumar": "GauravGoswami.png",
+        "Kajal Jha": "KajalJha.png",
+        "Kaushal Kumar": "Kaushal.png",
+        "Mohit Singh": "Mohit.png",
+        "Parth": "Parth Singh.png",
+        "Tushant Rajvanshi": "tushantSign.png"
     }
-    # get_stamp(test_engineer_dict["Zahid Raza"], r"C:\Users\aditya.verma\Desktop\ZahidSign.pdf")
-    # get_stamp(test_engineer_dict["Ankit Kumar"], r"C:\Users\aditya.verma\Desktop\ankitSign.pdf")
-    # get_stamp(test_engineer_dict["Mohit"], r"C:\Users\aditya.verma\Desktop\mohitSign.pdf")
-    # get_stamp(test_engineer_dict["Jatin Dalal"], r"C:\Users\aditya.verma\Desktop\jatinSign.pdf")
-    # get_stamp(test_engineer_dict["Avishek Kumar"], r"C:\Users\aditya.verma\Desktop\reportwala\Avisheksign.pdf")
-    # get_stamp(test_engineer_dict["Parth"], r"C:\Users\aditya.verma\Desktop\reportwala\Parthsign.pdf")
-    # # get_stamp(test_engineer_dict["Tushant"], r"C:\Users\aditya.verma\Desktop\kaushalsign.pdf")
-    # get_stamp(test_engineer_dict["Isha Sachdev"], r"C:\Users\aditya.verma\Desktop\reportwala\ishasign.pdf")
-    # get_stamp("stampBDH.pickle", r"C:\Users\aditya.verma\Desktop\reportwala\stamp1.pdf")
-    # print("sign created")
     test_engineer_name = request_json.form["test_engineer_name"]
     report_file_name = request_json.form["report_file_name"]
     approving_authority = request_json.form["approving_authority"]
@@ -446,19 +430,20 @@ def func(request_json):
     pd.to_pickle(report_data.REPORT_FILE_DATA_FRAME.append(status_repost, ignore_index=True), "reportFileDataframe.pkl")
     status_repost = json.dumps(status_repost)
     write_report_in_dir(document_name, status_repost)
-    pdf_to_image_pdf(out_file, img_pdf_path, test_engineer_name, test_engineer_dict, approving_authority)
+    test_engineer_sign = os.path.join("signs",test_engineer_dict_for_text_pdf[test_engineer_name])
+    make_text_pdf_with_watermark(out_file, img_pdf_path, test_engineer_name, test_engineer_sign, approving_authority)    # get_stamp(test_engineer_dict["Zahid Raza"], r"C:\Users\aditya.verma\Desktop\ZahidSign.pdf")
     mail_data = {
         "to": CONFIG["MailTo"],
         "Subject": f"New Report Uploaded {document_name}",
         "body": f"Hi <br/> <b> {test_engineer_name} </b> has uploaded new test report named <b> {document_name} </b> please view it and take necessary action. <br/> Click here to view the report {CONFIG['AppURL']}",
     }
-    mailService = MailService()
-    mailService.send_mail(mail_data)
+    # mailService = MailService()
+    # mailServicelService.send_mail(mail_data)
 
 if __name__ =="__main__":
-    out_file = "/Users/adityaverma/Downloads/A220601-010Rpe.pdf"
+    out_file = "D:/temp1/AU2-220204-001Report/AU2-220204-001Report.pdf"
     img_pdf_path = "test_img.pdf"
-    test_engineer_name = "Gaurav Kumar"
+    test_engineer_name = "Parth"
     test_engineer_dict_for_text_pdf = {
         "Ankit Kumar": "Ankit Kumar.png",
         "Aviral mishra": "Aviral.png",
@@ -470,51 +455,7 @@ if __name__ =="__main__":
         "Parth": "Parth Singh.png",
         "Tushant Rajvanshi": "tushantSign.png"
     }
-    approving_authority = "Zahid Raza"
+    approving_authority = "Avishek"
     # pdf_to_image_pdf(out_file, img_pdf_path, test_engineer_name, test_engineer_dict, approving_authority)
     test_engineer_sign = os.path.join("signs",test_engineer_dict_for_text_pdf[test_engineer_name])
     make_text_pdf_with_watermark(out_file, img_pdf_path, test_engineer_name, test_engineer_sign, approving_authority)
-# if __name__ == "__main__":
-#     pass
-    # get_stamp("GauravGoswamiSign.pickle", r"C:\Users\aditya.verma\Desktop\reportwala\GauravGoswamiSign.pdf")
-    # get_stamp("ShashankRaghubanshiSign.pickle", r"C:\Users\aditya.verma\Desktop\reportwala\ShashankRaghubanshiSign.pdf")
-    # get_stamp("sumitSign.pickel", r"C:\Users\aditya.verma\Desktop\reportwala\sumitSign.pdf")
-    # get_stamp("aviralSign.pickel", r"C:\Users\aditya.verma\Desktop\reportwala\aviralSign.pdf")
-    # get_stamp("triptiSign.pickel", r"C:\Users\aditya.verma\Desktop\reportwala\triptiSign.pdf")
-    # get_stamp("kahajSign.pickel", r"C:\Users\aditya.verma\Desktop\reportwala\kahajSign.pdf")
-    # out_file = r"C:\Users\aditya.verma\Downloads\HCS Executive Branch Preliminary Exam.pdf"
-    # pages = convert_from_path(out_file, 200)
-    # X = pages[0].size[0]
-    # Y = pages[0].size[1]
-    # text_to_replace = "[Signature of the Candidate]"
-    # sign = get_pix_map_for_forsign_wiht_location(out_file, "priyanka.pickel",text_to_replace, X, Y)
-    # text_to_replace = "Place :"
-    # place = get_pix_map_for_forsign_wiht_location(out_file, "place.pickel", text_to_replace, X, Y, "right")
-    # text_to_replace = "Date :"
-    # date = get_pix_map_for_forsign_wiht_location(out_file, "date.pickel", text_to_replace, X, Y, "right")
-    # # print(sign)
-    # newPage = []
-    # for i, page in enumerate(pages):
-    #     print(i)
-    #     open_cv_image = np.array(page)
-    #     pixmap = sign[i]
-    #     for pixel in pixmap.keys():
-    #         open_cv_image[pixel[0], pixel[1]] = pixmap[pixel]
-    #     if i == 3:
-    #         pixmap = place[i]
-    #         for pixel in pixmap.keys():
-    #             open_cv_image[pixel[0], pixel[1]] = pixmap[pixel]
-    #     if i == 2:
-    #         pixmap = date[i]
-    #         print(pixmap)
-    #         for pixel in pixmap.keys():
-    #             open_cv_image[pixel[0], pixel[1]] = pixmap[pixel]
-    #     scale_percent = 60  # percent of original size
-    #     width = int(open_cv_image.shape[1] * scale_percent / 100)
-    #     height = int(open_cv_image.shape[0] * scale_percent / 100)
-    #     dim = (width, height)
-    #     # resize image
-    #     resized = cv2.resize(open_cv_image, dim, interpolation=cv2.INTER_AREA)
-    #     newPage.append(Image.fromarray(resized))
-    # img_pdf_path = "sign.pdf"
-    # newPage[0].save(img_pdf_path, save_all=True, append_images=newPage[1:])

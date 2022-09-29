@@ -1,1 +1,1 @@
-python createTestReport.py Api -port 5000 -configPath config.json
+python createTestReport.py Api -host 0.0.0.0 -port 5000 -configPath config.json
