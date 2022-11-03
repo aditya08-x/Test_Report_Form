@@ -6,12 +6,11 @@ import { Dropdown, Row, Form, Col } from 'react-bootstrap'
 import CircularProgress from '@material-ui/core/CircularProgress';
 
 import Button from '@material-ui/core/Button';
-
 class UploadFile extends React.Component {
     constructor(props) {
         super(props)
         this.state = {
-            testEngineerNameList: ["Select a name", "Ankit Kumar", "Kaushal Kumar", "Mohit Singh", "Jatin", "Avishek Kumar", "Parth", "Tushant Rajvanshi", "Isha Sachdev", "Sumit Saklani", "Aviral mishra", "Tripti Tiwari", "Kajal Jha","Gaurav Goswami"],
+            testEngineerNameList: ["Select a name", "Ankit Kumar", "Kaushal Kumar", "Mohit Singh", "Avishek Kumar", "Parth", "Tushant Rajvanshi", "Aviral mishra", "Kajal Jha","Gaurav Goswami"],
             selectedEngineerName: "Select a name",
             approvingAuthority: "Zahid Raza",
             approvingAuthorityList: ["Zahid Raza", "Shashank Raghubanshi"],

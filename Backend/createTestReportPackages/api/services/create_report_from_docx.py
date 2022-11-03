@@ -59,7 +59,7 @@ def make_text_pdf_with_watermark(out_file, img_pdf_path, test_engineer_name, tes
     watermark_file_name = os.path.join(save_document_path, document_name) + 'signs_watermark.pdf'
     # watermark_file_name = 'letterhead_to_add.pdf'
     c = canvas.Canvas(watermark_file_name)
-    watermark = PdfFileReader(open("Letterheadsite2.pdf", "rb"))
+    watermark = PdfFileReader(open("Letterhead.pdf", "rb"))
     output_file_wm = PdfFileWriter()
     for i in range(page_count_text_pdf):
         if i in approving_authorit_stamp_coordinates:
@@ -222,7 +222,7 @@ def get_stamp_location_for_BDH(out_file, X, Y):
     scaley = Y / page.MediaBox[3]
     print(scalex, scaley)
     coordinate_list = {}
-    BDH_stamp = os.path.join("signs","stampBDH1.png")
+    BDH_stamp = os.path.join("signs","stampBDH.png")
     for i, page in enumerate(doc):
         text = "Sailesh Chandra Srivastava"
         text_instances = page.searchFor(text)
@@ -400,7 +400,7 @@ def func(request_json):
         "Ankit Kumar": "Ankit Kumar.png",
         "Aviral mishra": "Aviral.png",
         "Avishek Kumar": "Avishek.png",
-        "Gaurav Kumar": "GauravGoswami.png",
+        "Gaurav Goswami": "GauravGoswami.png",
         "Kajal Jha": "KajalJha.png",
         "Kaushal Kumar": "Kaushal.png",
         "Mohit Singh": "Mohit.png",

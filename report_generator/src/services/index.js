@@ -1,5 +1,5 @@
 import axios from 'axios';
-const REACT_APP_BACKEND_URL = "http://localhost:5000"
+const REACT_APP_BACKEND_URL = "http://192.168.1.202:5000"
 const HelperServices = {
     //   getJWTToken(username, password) {
     //     return new Promise(
